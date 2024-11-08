@@ -2,6 +2,7 @@ recover/wandb
 relabel/wandb
 train/wandb
 squeeze/wandb
+squeeze/squeeze_wo_ema
 relabel/relabel_folder_with_label
 relabel/relabel_folder_without_label
 recover/syn_data
