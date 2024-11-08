@@ -1,0 +1,18 @@
+CUDA_VISIBLE_DEVICES=0 python direct_train_fixed.py \
+    --batch-size 100 \
+    --wandb-api-key "085788de93539cf40689d3714b6dc50a54f20a86" \
+    --ls-type cos \
+    --loss-type "mse_gt" \
+    --ce-weight 0.025 \
+    -T 20 \
+    --adamw-lr 0.001 \
+    --gpu-id 0,1,2 \
+    --epochs 300 \
+    -j 4 \
+    --st 2 \
+    --ema-dr 0.99 \
+    --mix-type 'cutmix'\
+    --weight-decay 0.0005 \
+    --train-dir /data/sunny/EDC/Branch_Tiny_ImageNet/recover/syn_data/d_tinyim_it_0_ipc_1_flat_True_bs_100_lr_0.05_ca_global_tea_all_conw_1_batw_1_mom_0.99 \
+    --val-dir /data/sunny/DD/SRe2L/SRe2L/*small_dataset/tiny-IN/data \
+    --teacher-name ResNet18 ConvNetW128 MobileNetV2 WRN_16_2 ShuffleNetV2_0_5  \

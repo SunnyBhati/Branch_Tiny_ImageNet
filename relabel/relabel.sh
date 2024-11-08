@@ -1,0 +1,13 @@
+CUDA_VISIVLE_DEVICES=0 python generate_soft_label_with_db.py \
+    -b 100 \
+    -j 8 \
+    --epochs 300 \
+    --fkd-seed 42 \
+    --input-size 64 \
+    --min-scale-crops 0.08 \
+    --max-scale-crops 1 \
+    --use-fp16 --candidate-number 5 \
+    --fkd-path /data/sunny/EDC/Branch_Tiny_ImageNet/relabel/relabel_folder_without_label/d_tinyim_it_2000_ipc_1_flat_True_bs_100_lr_0.05_ca_global_tea_[ResMobShueff]_conw_1_batw_1_mom_0.99_fmul_True \
+    --mode 'fkd_save' \
+    --mix-type 'cutmix' \
+    --data /data/sunny/EDC/Branch_Tiny_ImageNet/recover/syn_data/d_tinyim_it_2000_ipc_1_flat_True_bs_100_lr_0.05_ca_global_tea_[ResMobShueff]_conw_1_batw_1_mom_0.99_fmul_True \
