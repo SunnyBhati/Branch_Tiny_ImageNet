@@ -91,7 +91,9 @@ def main_worker(gpu,args, model_teacher, model_verifier, ipc_id_range):
 
     for i, (_model_teacher) in enumerate(model_teacher):
         for name, module in _model_teacher.named_modules():
-            full_name = str(_model_teacher.__class__.__name__) + "=" + name
+            full_name = str(args.aux_teacher[i]) + "=" + name
+            print(full_name)
+          
             if isinstance(module, nn.BatchNorm2d):
                 _hook_module = BNFeatureHook(module,save_path=args.statistic_path,
                                             name=full_name,
@@ -119,7 +121,7 @@ def main_worker(gpu,args, model_teacher, model_verifier, ipc_id_range):
                 load_tag_dict[i] = load_tag_dict[i] & _hook_module.load_tag
                 loss_r_feature_layers[i].append(_hook_module)
 
-
+  
     if not load_tag:
         train_set, val_set = load_data(args.train_data_path,args.train_data_path,args)
         train_loader = torch.utils.data.DataLoader(train_set,
@@ -146,7 +148,8 @@ def main_worker(gpu,args, model_teacher, model_verifier, ipc_id_range):
         print("Training Statistic Information Is Successfully Load")
 
 
-  
+
+
     initial_img_cache = PreImgPathCache(args.initial_img_dir+'train/',transforms=transforms.Compose([
                                                              transforms.Resize((64,64)),
                                                              transforms.RandomHorizontalFlip(),
@@ -213,8 +216,12 @@ def main_worker(gpu,args, model_teacher, model_verifier, ipc_id_range):
             
             for (idx, mod) in enumerate(loss_r_feature_layers[id]):
                 mod.set_ori()
-        
-            sub_outputs = model_teacher[id](inputs_jit)
+
+            if torch.cuda.device_count() > 1:
+                print(f"Using {torch.cuda.device_count()} GPUs!")
+            model_out = torch.nn.DataParallel( model_teacher[id])
+            sub_outputs=model_out(inputs_jit)
+            # sub_outputs = model_teacher[id](inputs_jit)
             
             # R_cross classification loss
             loss_ce = criterion(sub_outputs, targets)

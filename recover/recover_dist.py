@@ -329,7 +329,7 @@ def save_images_jpeg(args, images, targets, ipc_ids):
 
         image_np = images[id].data.cpu().numpy().transpose((1, 2, 0))
         pil_image = Image.fromarray((image_np * 255).astype(np.uint8))
-        pil_image.save(place_to_store,"JPEG",highest)
+        pil_image.save(place_to_store,"JPEG",quality=100)
 
 
 def validate(input, target, model):

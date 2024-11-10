@@ -11,9 +11,9 @@ CUDA_VISIBLE_DEVICES=0,1,2 python recover_dist.py \
     --verifier --store-best-images \
     --batch_weight 1 \
     --conv_weight 1 \
-    --aux-teacher ResNet18 MobileNetV2 ShuffleNetV2_0_5 efficientnet_b0  \
+    --aux-teacher ResNet18 MobileNetV2 ShuffleNetV2_0_5 ResNet50  \
     --iteration 2000 \
     --ipc-number 50 \
     --flatness \
-    --gpu-id 1,2 \
+    --gpu-id 0,1 \
     --first-multiplier 10 \
