@@ -50,10 +50,10 @@ def main(args):
     
     ''' Model Selection and Model path'''
     
-    assert args.model in ["ResNet18", "MobileNetV2", "ShuffleNetV2_0_5", "WRN_16_2",
+    assert args.model in ["ResNet50","ResNet18", "MobileNetV2", "ShuffleNetV2_0_5", "WRN_16_2",
                           "ConvNetW128","efficientnet_b0","efficientnet_v2_s"], f"{args.model} must be one of ResNet18, MobileNetV2, ShuffleNetV2_0_5, WRN_16_2!"
     
-    if args.model in ["ResNet18", "MobileNetV2", "ShuffleNetV2_0_5"]:
+    if args.model in ["ResNet18", "MobileNetV2", "ShuffleNetV2_0_5","ResNet50"]:
         model = model_dict[args.model](num_classes=args.num_classes)
     elif args.model =="efficientnet_b0":
         model = models.efficientnet_b0(weights=None)

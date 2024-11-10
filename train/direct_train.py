@@ -291,7 +291,6 @@ def main_worker(gpu,args):
         wandb_metrics = {}
         now_loss,time_done = train(model, model_teacher, args, epoch, gpu, ema_model=ema_model)
         
-        wandb.log(wandb_metrics)
         ema_model.ema_swap(model)
         top1 = validate(model, args, epoch)
         ema_model.ema_swap(model)
@@ -306,7 +305,7 @@ def main_worker(gpu,args):
         
         single_epoch_time+=time_done
         # remember best acc@1 and save checkpoint
-
+     
         is_best = top1 > args.best_acc1 #(True or False)
         args.best_acc1 = max(top1, args.best_acc1) 
         save_checkpoint({'epoch': epoch,
