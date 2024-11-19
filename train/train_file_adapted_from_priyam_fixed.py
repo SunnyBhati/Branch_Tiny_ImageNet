@@ -145,7 +145,7 @@ def get_args():
     parser.add_argument('--loss-type', type=str, default="mse_gt", help='the type of the loss function')
     parser.add_argument('--train-dir', type=str, default=None,help='path to training dataset')
     parser.add_argument('--val-dir', type=str,default='/path/to/imagenet/val', help='path to validation dataset')
-    parser.add_argument('--output-dir', type=str, default='./save/', help='path to output dir')
+    parser.add_argument('--output-dir', type=str, default='./save_fixed/', help='path to output dir')
     parser.add_argument('--ls-type', default="cos",type=str, help='the type of lr scheduler')
     parser.add_argument('--alrs-dr', default=0.9975,type=float, help='the decay rate of ALRS')
     parser.add_argument('--ema-dr', default=0.999,type=float, help='the decay rate of EMA')
@@ -164,7 +164,7 @@ def get_args():
     parser.add_argument('--keep-topk', type=int, default=200,help='keep topk logits for kd loss')
     parser.add_argument('-T', '--temperature', type=float,default=3.0, help='temperature for distillation loss')
     parser.add_argument('--fkd-path', type=str,default=None, help='path to fkd label')
-    parser.add_argument('--wandb-project', type=str,default='EDC_TIN_sftlbl_fixed_thirdstage_new_priyam', help='wandb project name')
+    parser.add_argument('--wandb-project', type=str,default='EDC_TIN_fixed_final_post_submission', help='wandb project name')
     parser.add_argument('--wandb-api-key', type=str,default=None, help='wandb api key')
     parser.add_argument('--mix-type', default=None, type=str,choices=['mixup', 'cutmix', None], help='mixup or cutmix or None')
     parser.add_argument('--fkd_seed', default=42, type=int,help='seed for batch loading sampler')
@@ -223,7 +223,7 @@ def main_worker(gpu,args):
     if not torch.cuda.is_available():
         raise Exception("need gpu to train!")
     
-    args.output_dir= './save/'+group_name+'/'+name_exp+'/'
+    args.output_dir= './save_fixed/'+group_name+'/'+name_exp+'/'
     assert os.path.exists(args.train_dir)
     
     if not os.path.exists(args.output_dir):

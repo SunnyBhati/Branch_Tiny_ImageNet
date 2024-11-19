@@ -102,7 +102,7 @@ def get_args():
     parser.add_argument('--loss-type', type=str, default="mse_gt", help='the type of the loss function')
     parser.add_argument('--train-dir', type=str, default=None,help='path to training dataset')
     parser.add_argument('--val-dir', type=str,default='/path/to/imagenet/val', help='path to validation dataset')
-    parser.add_argument('--output-dir', type=str, default='./save/', help='path to output dir')
+    parser.add_argument('--output-dir', type=str, default='./save_not_fixed/', help='path to output dir')
     parser.add_argument('--ls-type', default="cos",type=str, help='the type of lr scheduler')
     parser.add_argument('--alrs-dr', default=0.9975,type=float, help='the decay rate of ALRS')
     parser.add_argument('--ema-dr', default=0.999,type=float, help='the decay rate of EMA')
@@ -162,7 +162,7 @@ def main_worker(gpu,args):
     if not torch.cuda.is_available():
         raise Exception("need gpu to train!")
     
-    args.output_dir= './save/'+group_name+'/'+name_exp+'/'
+    args.output_dir= './save_not_fixed/'+group_name+'/'+name_exp+'/'
     assert os.path.exists(args.train_dir)
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
