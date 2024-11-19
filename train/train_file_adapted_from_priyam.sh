@@ -16,16 +16,13 @@ CUDA_VISIBLE_DEVICES=0,1,2 python train_file_adapted_from_priyam.py \
     --lr-warmup-method 'linear' \
     --lr-warmup-decay 0.01 \
     --epochs 300 \
-    --model ResNet18 \
+    --model ResNet101 \
     --ipc 10 \
-    --gpu 1 \
-    --train-dir /data/sunny/EDC/Branch_Tiny_ImageNet/recover/syn_data/d_tinyim_it_2000_ipc_10_flat_True_bs_100_lr_0.05_ca_global_tea_[Res]_conw_1_batw_1_mom_0.99_fmul_True \
-    --val-dir /data/sunny/DD/SRe2L/SRe2L/*small_dataset/tiny-IN/data \
-    --teacher-name ResNet18 MobileNetV2 ShuffleNetV2_0_5 efficientnet_b0 \
-                  
-    
+    --gpu 0 \
+    --train-dir /data/sunny/EDC/Branch_Tiny_ImageNet/recover/syn_data_jpeg/d_tinyim_it_0_ipc_10_flat_True_bs_100_lr_0.05_ca_global_tea_[ResMobShueff]_conw_1_batw_1_mom_0.99_fmul_True \
+    --val-dir ../dataset/data/ \
+    --teacher-name ResNet18 MobileNetV2 ShuffleNetV2_0_5 efficientnet_b0  \    
     #ResNet18 ConvNetW128 MobileNetV2 WRN_16_2 ShuffleNetV2_0_5 \
     #ResNet18 MobileNetV2 ShuffleNetV2_0_5 efficientnet_b0
     #soft-augmenttaion
-    
     #ResNet18 ConvNetW128 MobileNetV2 WRN_16_2 ShuffleNetV2_0_5 \

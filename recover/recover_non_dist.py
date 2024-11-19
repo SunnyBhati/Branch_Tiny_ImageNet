@@ -185,7 +185,6 @@ def main_worker(gpu,args, model_teacher, model_verifier, ipc_id_range):
         data_type=torch.float
         print(f"In GPU {gpu}, targets is set as: \n{targets}\n, ipc_ids is set as: \n{ipc_ids}")
         
-       
         inputs = torch.stack([initial_img_cache.random_img_sample(_target) for _target in targets.tolist()],0).to(f'cuda:{gpu}').to(data_type)
         inputs.requires_grad_(True)
 

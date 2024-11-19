@@ -7,6 +7,7 @@ import collections
 from torchvision import models
 import time
 from tqdm import tqdm
+import wandb
 import numpy as np
 import torchvision.datasets
 from PIL import Image
@@ -25,8 +26,19 @@ from baseline import get_network as ti_get_network
 from tiny_in_dataset_new import TinyImageNet
 
 
-normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                 std=[0.229, 0.224, 0.225])
+
+normalize = transforms.Normalize(mean=[0.4802, 0.4481, 0.3975],
+                                std=[0.2302, 0.2265, 0.2262])
+
+def start_subexperiment(args,name,group_name):
+    # Start a W&B run for the subexperiment
+    run = wandb.init(
+        project=args.project_main,  
+        name= name,
+        reinit=True, 
+        group=group_name)  # Optional: Group experiments togethe)
+    
+    return run
 
 def load_data(traindir, valdir, args):
 
@@ -38,7 +50,6 @@ def load_data(traindir, valdir, args):
                                           normalize])
     
     dataset = TinyImageNet(traindir, split='train', download=True, transform=train_transform)
-    
     val_transform = transforms.Compose([transforms.ToTensor(),normalize,])
     dataset_test = TinyImageNet(valdir, split='val', download=True, transform=val_transform)
     return dataset, dataset_test
@@ -86,13 +97,7 @@ def main_worker(gpu, ngpus_per_node, args, model_teacher, model_verifier, ipc_id
     for i, (_model_teacher) in enumerate(model_teacher):
         
         for name , module in _model_teacher.named_modules():
-            # print(name,'name')
-            # print('module')
-            # print(module)
-            # exit()
-            # print(name,'name',module,'module')
-            full_name = str(_model_teacher.__class__.__name__) + "=" + name
-            # print(full_name,'full_name')
+            full_name = str(args.aux_teacher[i]) + "=" + name
             if isinstance(module, nn.BatchNorm2d):
                 _hook_module = BNFeatureHook(module,save_path=args.statistic_path,
                                             name=full_name,
@@ -175,7 +180,14 @@ def main_worker(gpu, ngpus_per_node, args, model_teacher, model_verifier, ipc_id
         .transpose(1, 0).contiguous().view(-1)
     counter = 0
     start_number=0
+    wandb.login(key=args.API_KEY)
+    new_count=0
     for zz in range(start_number, total_number, batch_size):
+        sub_exp='batch_'+str(int(new_count))
+        run= start_subexperiment(args,sub_exp,args.exp_name)
+        
+        experiment_table = wandb.Table(columns=['Batch_number', "Total_loss","loss_ema_ce",'r_feature_loss','ce_loss','VerifierAccuracy_last','ipc'])
+
         sub_turn_index = turn_index[zz + gpu * sub_batch_size:min(zz + (gpu + 1) * sub_batch_size, total_number)]
         print(zz + gpu * sub_batch_size,min(zz + (gpu + 1) * sub_batch_size, total_number))
         targets = targets_all_all[sub_turn_index].cuda(gpu)
@@ -264,7 +276,9 @@ def main_worker(gpu, ngpus_per_node, args, model_teacher, model_verifier, ipc_id
                 if iteration % save_every == 0:
                     if hook_for_display is not None:
                         hook_for_display(inputs, targets)
-
+            
+            wandb.log({"iteration": iteration,"total_loss":loss.item(),"loss_r_feature":loss_r_feature.item(),"loss_ema_ce":loss_ema_ce.item(),
+                        'loss_ce_main': loss_ce.item(),'id':id})
             # do image update
             loss.backward()
             optimizer.step()
@@ -274,7 +288,7 @@ def main_worker(gpu, ngpus_per_node, args, model_teacher, model_verifier, ipc_id
 
             if gpu == 0 and (best_cost > loss.item() or iteration == 1):
                 best_inputs = inputs.data.clone()
-
+        new_count+=1
         if args.store_best_images:
             best_inputs = inputs.data.clone()  # using multicrop, save the last one
             best_inputs = denormalize(best_inputs)
@@ -424,6 +438,8 @@ def main_syn():
                         help="the path of the statistic file")
     args = parser.parse_args()
 
+    args.project_main='EDC_recover_orig_dist_code'
+
     val='['
     for name in args.aux_teacher:
         val+=name[0:3]
@@ -467,13 +483,10 @@ def main_syn():
     port_id = 10000 + np.random.randint(0, 1000)
     args.dist_url = 'tcp://127.0.0.1:' + str(port_id)
     args.distributed = True
+    args.API_KEY = os.environ.get("API_KEY")
   
 
-    # Using modules()
-    # for module in model.modules():
-    #     print(module)
-
-    ngpus_per_node = 2
+    ngpus_per_node = 1
     args.world_size = ngpus_per_node * args.world_size
     torch.multiprocessing.set_start_method('spawn')
     mp.spawn(main_worker, nprocs=ngpus_per_node,

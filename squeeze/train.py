@@ -37,6 +37,12 @@ def load_data(traindir, valdir, args):
 
 def main(args):
     ''' wand initialization'''
+    torch.manual_seed(42)
+    torch.cuda.manual_seed_all(42)
+
+# Ensure deterministic behavior
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
     wandb.login(key=args.wandb_key)
     wandb.init(project=args.project_name,
                name=args.model+'_lr_'+str(args.lr_teacher)+'_bs_'+str(args.batch_size))
@@ -189,14 +195,14 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Parameter Processing')
     parser.add_argument('--dataset', type=str, default='Tiny-ImageNet', help='dataset')
-    parser.add_argument('--project_name', type=str, default='EDC_squeeze_final', help='project_name')
+    parser.add_argument('--project_name', type=str, default='EDC_squeeze_final_100epochs', help='project_name')
     parser.add_argument('--gpu-device', type=str, default='0', help='gpu_device')
     parser.add_argument('--model', type=str, default='ConvNet', help='model')
     parser.add_argument('--lr-teacher', type=float, default=0.1, help='learning rate for updating network parameters')
     parser.add_argument('--batch-size', type=int, default=128, help='batch size for training networks')
     parser.add_argument('--num-classes', type=int, default=200, help='Number of classes in the dataset')
-    parser.add_argument('--data_path', type=str, default='data', help='dataset path')
-    parser.add_argument('--squeeze_path', type=str, default='./squeeze_wo_ema/', help='squeeze path')
+    parser.add_argument('--data-path', type=str, default='data', help='dataset path')
+    parser.add_argument('--squeeze-path', type=str, default='./squeeze_wo_ema/', help='squeeze path')
     parser.add_argument('--train-epochs', type=int, default=51)
     parser.add_argument('--mom', type=float, default=0.9, help='momentum')
     parser.add_argument('--l2', type=float, default=0, help='l2 regularization')

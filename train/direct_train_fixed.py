@@ -206,7 +206,7 @@ def main_worker(gpu,args):
 
     args.epochs=1000
     
-    if args.teacher_name ==["ResNet18", "ConvNetW128" ,"MobileNetV2","WRN_16_2", "ShuffleNetV2_0_5"]:
+    if args.teacher_name ==["ResNet18", "MobileNetV2","ShuffleNetV2_0_5",]:
         model_soft='all'
     else:
         model_soft=args.teacher_name[0]
@@ -291,13 +291,6 @@ def main_worker(gpu,args):
                                                pin_memory=True)
     print(len(train_dataset),len(train_loader))
 
-    # for i,(x,y,z) in enumerate(train_loader):
-    #     print(x,y.shape,z.shape)
-    #     exit()
-
-
-
-    # exit()
 
   
     # Data loading

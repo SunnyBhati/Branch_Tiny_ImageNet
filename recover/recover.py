@@ -23,7 +23,6 @@ import models as ti_models
 from baseline import get_network as ti_get_network
 from tiny_in_dataset import get_tinyimagenet_dataloaders, normalize
 
-
 class ApplyTransformToPair:
     def __init__(self, transform):
         self.transform = transform
