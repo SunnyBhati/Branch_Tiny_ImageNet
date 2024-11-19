@@ -121,7 +121,7 @@ def get_args():
     parser.add_argument('--keep-topk', type=int, default=200,help='keep topk logits for kd loss')
     parser.add_argument('-T', '--temperature', type=float,default=3.0, help='temperature for distillation loss')
     parser.add_argument('--fkd-path', type=str,default=None, help='path to fkd label')
-    parser.add_argument('--wandb-project', type=str,default='EDC_tin_transferability', help='wandb project name')
+    parser.add_argument('--wandb-project', type=str,default='EDC_notfixed_post_submission_final_exp', help='wandb project name')
     parser.add_argument('--wandb-api-key', type=str,default=None, help='wandb api key')
     parser.add_argument('--mix-type', default=None, type=str,choices=['mixup', 'cutmix', None], help='mixup or cutmix or None')
     parser.add_argument('--fkd_seed', default=42, type=int,help='seed for batch loading sampler')

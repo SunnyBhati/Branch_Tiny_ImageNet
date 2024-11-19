@@ -14,3 +14,6 @@ dataset
 recover/__pycache__
 train/__pycache__
 squeeze/__pycache__
+recover/syn_data_new_var
+recover/models/__pycache__
+models/__pycache__

@@ -56,10 +56,7 @@ class ApplyTransformToPair:
         self.transform = transform
     
     def __call__(self, img1, img2):
-        seed = random.randint(0,int(1e13))
-        torch.manual_seed(seed)
         img1_transformed = self.transform(img1)
-        torch.manual_seed(seed)
         img2_transformed = self.transform(img2)
         return img1_transformed, img2_transformed
     
@@ -186,6 +183,7 @@ def main_worker(gpu,args, model_teacher, model_verifier, ipc_id_range):
         print(f"In GPU {gpu}, targets is set as: \n{targets}\n, ipc_ids is set as: \n{ipc_ids}")
         
         inputs = torch.stack([initial_img_cache.random_img_sample(_target) for _target in targets.tolist()],0).to(f'cuda:{gpu}').to(data_type)
+        final_input_data=inputs.data.clone()
         inputs.requires_grad_(True)
 
         iterations_per_layer = args.iteration
@@ -285,6 +283,14 @@ def main_worker(gpu,args, model_teacher, model_verifier, ipc_id_range):
             acc_top_1_veri= validate(inputs,targets,model_verifier)
             save_images(args, best_inputs, targets, ipc_ids)
         
+        if args.store_best_images:
+             # using multicrop, save the last one
+            best_inputs = denormalize(final_input_data)
+            inputs = normalize((best_inputs * 255).int() / 255)
+            print("Testing...")
+            acc_top_1_veri= validate(inputs,targets,model_verifier)
+            save_images_input(args, best_inputs, targets, ipc_ids)
+        
         if iterations_per_layer > 0:
             experiment_table.add_data(sub_exp,loss.item(),loss_ema_ce.item(),loss_r_feature.item(),loss_ce.item(),acc_top_1_veri,args.ipc_number)
             wandb.log({"experiment_results": experiment_table})
@@ -309,7 +315,28 @@ def save_images(args, images, targets, ipc_ids):
 
         # save into separate folders
         dir_path = '{}/new{:03d}'.format(args.syn_data_path, class_id)
-        place_to_store = dir_path + '/class{:03d}_id{:03d}.png'.format(class_id, ipc_id_range[id])
+        place_to_store = dir_path + '/class{:03d}_id{:03d}.jpeg'.format(class_id, ipc_id_range[id])
+        if not os.path.exists(dir_path):
+            os.makedirs(dir_path, exist_ok=True)
+
+        image_np = images[id].data.cpu().numpy().transpose((1, 2, 0))
+        pil_image = Image.fromarray((image_np * 255).astype(np.uint8))
+        pil_image.save(place_to_store)
+
+def save_images_input(args, images, targets, ipc_ids):
+    ipc_id_range = ipc_ids
+    for id in range(images.shape[0]):
+        if targets.ndimension() == 1:
+            class_id = targets[id].item()
+        else:
+            class_id = targets[id].argmax().item()
+
+        if not os.path.exists(args.syn_data_path_initial):
+            os.mkdir(args.syn_data_path_initial)
+
+        # save into separate folders
+        dir_path = '{}/new{:03d}'.format(args.syn_data_path_initial, class_id)
+        place_to_store = dir_path + '/class{:03d}_id{:03d}.jpeg'.format(class_id, ipc_id_range[id])
         if not os.path.exists(dir_path):
             os.makedirs(dir_path, exist_ok=True)
 
@@ -354,8 +381,8 @@ def main_syn():
     parser.add_argument('--exp-name', type=str, default='test',
                         help='name of the experiment, subfolder under syn_data_path')
     parser.add_argument('--ipc-number', type=int, default=10, help='the number of each ipc')
-    parser.add_argument('--syn-data-path', type=str,
-                        default='./syn_data', help='where to store synthetic data')
+    parser.add_argument('--syn-data', type=str,
+                        default='./syn_data_new_var', help='where to store synthetic data')
     parser.add_argument('--syn-data-path-best', type=str,
                         default='./syn_data_best', help='where to store synthetic data')
     parser.add_argument('--pre-train-path', type=str,
@@ -406,19 +433,24 @@ def main_syn():
                         help="the path of the statistic file")
     
     args = parser.parse_args()
-    args.project_main='EDC_recover_paper'
+    args.project_main='EDC_recover_post_submission'
     
     val='['
     for name in args.aux_teacher:
         val+=name[0:3]
     val+=']'
 
-    args.exp_name= 'd_'+'tinyim'+'_it_'+str(args.iteration)+'_ipc_'+str(args.ipc_number)+"_flat_"+str(args.flatness)+'_bs_'+str(args.batch_size)+ '_lr_'+ str(args.lr)+'_ca_'+str(args.category_aware)+'_tea_'+str(val)+'_conw_'+str(args.conv_weight)+'_batw_'+str(args.batch_weight)+'_mom_'+str(args.training_momentum)+'_fmul_'+str(args.first_multiplier)
-    args.syn_data_path = os.path.join(args.syn_data_path, args.exp_name)
-    args.syn_data_path_best = os.path.join(args.syn_data_path_best, args.exp_name)
+    random_number=random.randint(0,int(1e4))
+    torch.manual_seed(random_number)
+    torch.cuda.manual_seed_all(random_number)
+    args.exp_name= str(random_number)+'_d_'+'tinyim'+'_it_'+str(args.iteration)+'_ipc_'+str(args.ipc_number)+"_flat_"+str(args.flatness)+'_bs_'+str(args.batch_size)+ '_lr_'+ str(args.lr)+'_ca_'+str(args.category_aware)+'_tea_'+str(val)+'_conw_'+str(args.conv_weight)+'_batw_'+str(args.batch_weight)+'_mom_'+str(args.training_momentum)+'_fmul_'+str(args.first_multiplier)
+    args.exp_name_orig= str(random_number)+'_d_'+'tinyim'+'_it_'+'0'+'_ipc_'+str(args.ipc_number)+"_flat_"+str(args.flatness)+'_bs_'+str(args.batch_size)+ '_lr_'+ str(args.lr)+'_ca_'+str(args.category_aware)+'_tea_'+str(val)+'_conw_'+str(args.conv_weight)+'_batw_'+str(args.batch_weight)+'_mom_'+str(args.training_momentum)+'_fmul_'+str(args.first_multiplier)
+    args.syn_data_path = os.path.join(args.syn_data, args.exp_name)
+    args.syn_data_path_initial= os.path.join(args.syn_data, args.exp_name_orig)
     if not os.path.exists(args.syn_data_path):
         os.makedirs(args.syn_data_path)
-
+    if not os.path.exists(args.syn_data_path_initial):
+        os.makedirs(args.syn_data_path_initial)
 
     model_teacher = []
     for name in args.aux_teacher:
