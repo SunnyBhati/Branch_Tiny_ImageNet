@@ -17,3 +17,5 @@ squeeze/__pycache__
 recover/syn_data_new_var
 recover/models/__pycache__
 models/__pycache__
+save_not_fixed
+save_fixed

@@ -16,10 +16,10 @@ CUDA_VISIBLE_DEVICES=0,1,2 python train_file_adapted_from_priyam_fixed.py \
     --lr-warmup-method 'linear' \
     --lr-warmup-decay 0.01 \
     --epochs 300 \
-    --model ResNet18 \
+    --model "DeiT-Tiny" \
     --ipc 100 \
     --gpu 0 \
-    --train-dir /data/sunny/EDC/Branch_Tiny_ImageNet/recover/syn_data_jpeg/d_tinyim_it_2000_ipc_100_flat_True_bs_100_lr_0.05_ca_global_tea_[effMobShuRes]_conw_1_batw_1_mom_0.99_fmul_True \
+    --train-dir /data/sunny/EDC/Branch_Tiny_ImageNet/recover/syn_data_new_var/8488_d_tinyim_it_2000_ipc_100_flat_True_bs_100_lr_0.05_ca_global_tea_[ResMobShueff]_conw_1_batw_1_mom_0.99_fmul_True \
     --val-dir ../dataset/data/ \
     --teacher-name ResNet18 MobileNetV2 ShuffleNetV2_0_5 efficientnet_b0 \
                   

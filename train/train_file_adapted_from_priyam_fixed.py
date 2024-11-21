@@ -7,6 +7,7 @@ import argparse
 import numpy as np
 import wandb
 import time
+from timm import create_model
 from copy import deepcopy
 import torch.distributed as dist
 sys.path.append('../')
@@ -164,7 +165,7 @@ def get_args():
     parser.add_argument('--keep-topk', type=int, default=200,help='keep topk logits for kd loss')
     parser.add_argument('-T', '--temperature', type=float,default=3.0, help='temperature for distillation loss')
     parser.add_argument('--fkd-path', type=str,default=None, help='path to fkd label')
-    parser.add_argument('--wandb-project', type=str,default='EDC_TIN_fixed_final_post_submission', help='wandb project name')
+    parser.add_argument('--wandb-project', type=str,default='EDC_TIN_fixed_transferability', help='wandb project name')
     parser.add_argument('--wandb-api-key', type=str,default=None, help='wandb api key')
     parser.add_argument('--mix-type', default=None, type=str,choices=['mixup', 'cutmix', None], help='mixup or cutmix or None')
     parser.add_argument('--fkd_seed', default=42, type=int,help='seed for batch loading sampler')
@@ -291,6 +292,31 @@ def main_worker(gpu,args):
     print("=> loading student model '{}'".format(args.model))
     if "ConvNet" in args.model:
         model = ti_get_network(args.model, channel=3, num_classes=200, im_size=(64, 64), dist=False)
+    elif "DeiT-Tiny" in args.model:
+        model = create_model('deit_tiny_patch16_224', pretrained= False)
+
+        # Update the model's positional embeddings
+        pos_embed = model.pos_embed  # Positional embeddings
+        cls_token = pos_embed[:, 0, :]  # CLS token
+        pos_tokens = pos_embed[:, 1:, :]  # Patch embeddings
+
+        # Adjust positional embeddings for 4x4 grid (64x64 -> 16 patches)
+        pos_tokens = pos_tokens.reshape(1, 14, 14, -1)  # Original grid (14x14 for 224x224 images)
+        pos_tokens = nn.functional.interpolate(
+        pos_tokens.permute(0, 3, 1, 2),  # [1, 192, 14, 14]
+        size=(4, 4),  # New grid size (4x4 for 64x64 images)
+        mode='bicubic',
+        align_corners=False
+        ).permute(0, 2, 3, 1).reshape(1, 16, -1)  # [1, 16, 192]
+
+        # Concatenate CLS token and new positional encodings
+        new_pos_embed = torch.cat([cls_token.unsqueeze(1), pos_tokens], dim=1)  # [1, 17, 192]
+        model.pos_embed = nn.Parameter(new_pos_embed)
+        model.patch_embed.img_size = (64, 64)  # Update the expected image size
+        model.patch_embed.grid_size = (4, 4)
+        num_classes = 200
+        model.head = nn.Linear(model.head.in_features, num_classes)
+        
     else:
         model = ti_models.model_dict[args.model](num_classes=200)
     
